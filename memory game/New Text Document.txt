@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>memory game</title>
+    <style>
+        body {
+            background-color: #0f0e0e;
+        }
+
+        img {
+            object-fit: contain;
+        }
+
+        .cont {
+            position: relative;
+            perspective: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            position: relative;
+            transform-style: preserve-3d;
+            -moz-transform-style: preserve-3d;
+            -o-transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+            transition: transform 2s, all 0.5s ease;
+            -moz-transition: transform 2s, all 0.5s ease;
+            -o-transition: transform 2s, all 0.5s ease;
+            -webkit-transition: transform 2s, all 0.5s ease;
+            
+            transform-origin: right center;
+            -o-transform-origin: right center;
+            -webkit-transform-origin: right center;
+            -moz-transform-origin: right center;
+            /* transform: translateX(-100%) rotateY(-180deg); */
+        }
+
+        .card:hover {
+            cursor: pointer;
+        }
+
+        .face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backface-visibility: hidden;
+            -moz-backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            -o-backface-visibility: hidden;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            -moz-transform: rotateY(180deg);
+            -o-transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+            background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(182, 11, 9, 1) 100%, rgba(0, 212, 255, 1) 100%);
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            border: 5px solid black;
+        }
+
+        .flipped {
+            transform: rotateY(180deg);
+            -moz-transform: rotateY(180deg);
+            -o-transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+        }
+
+        .choices {
+            text-align: center;
+            flex-direction: column;
+            width: 500px;
+            margin: 60px auto;
+        }
+
+        .choice {
+            margin: 10px;
+            background: linear-gradient(90deg, rgba(2, 0, 36, 1) 0%, rgba(182, 11, 9, 1) 100%, rgba(0, 212, 255, 1) 100%);
+            text-align: center;
+            color: white;
+            padding: 20px;
+            display: block;
+            width: 100%;
+            font-size: 30px;
+            letter-spacing: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 40px;
+            transition: 0.4s;
+            -moz-transition: 0.4s;
+            -o-transition: 0.4s;
+            -webkit-transition: 0.4s;
+        }
+
+        h1 {
+            font-size: 50px;
+            letter-spacing: 2px;
+            color: white;
+        }
+
+        .choice:hover {
+            color: black;
+            /* color: rgb(28, 111, 28); */
+            width: 95%;
+            padding: 20px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <audio id="flipSound" src="sounds/flip.mp3"></audio>
+    <audio id="wrong" src="sounds/wrong.mp3"></audio>
+    <audio id="right" src="sounds/right.mp3"></audio>
+    <audio id="win" src="sounds/win.mp3"></audio>
+
+    <div class="choices">
+
+        <h1 style="margin: 0;">what do you want the pictures content</h1>
+        <p style="font-size: 100px; margin: 0;">&#128513</p>
+        <button type="button" class="choice" id="c1">Fruits</button>
+        <button type="button" class="choice" id="c2">Anime</button>
+        <button type="button" class="choice" id="c3">Memes</button>
+
+    </div>
+
+
+    <div class="cont">
+
+        <script>
+
+            var cards = new Array(12);
+            var shuffledOrder = [];
+            var el;
+            var flippedCards = [];
+            var source = [];
+
+            var flipSound = document.getElementById("flipSound");
+            var right = document.getElementById("right");
+            var wrong = document.getElementById("wrong");
+
+            var choices = document.querySelector(".choices");
+            var c1 = document.getElementById('c1');
+            var c2 = document.getElementById('c2');
+            var c3 = document.getElementById('c3');
+            var userChoice = '';
+
+            // Add event listeners to each button
+            c1.addEventListener('click', function () {
+                userChoice = 'Fruits';
+                choices.style.display = "none";
+                start();
+            });
+
+            c2.addEventListener('click', function () {
+                userChoice = 'Anime';
+                choices.style.display = "none";
+                start();
+            });
+
+            c3.addEventListener('click', function () {
+                userChoice = 'Memes';
+                choices.style.display = "none";
+                start();
+            });
+
+
+            function start() {
+
+                // Create an array with each card's index repeated twice
+                for (let i = 0; i < cards.length; i++) {
+                    shuffledOrder.push(i);
+                    shuffledOrder.push(i);
+                }
+
+                // Shuffle the order of the cards using Fisher-Yates shuffle algorithm
+                for (let i = shuffledOrder.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledOrder[i], shuffledOrder[j]] = [shuffledOrder[j], shuffledOrder[i]];
+                }
+
+                for (let i = 0; i < shuffledOrder.length; i++) {
+                    cards[i] = document.createElement('div');
+                    var img = document.createElement('img');
+                    img.src = `${userChoice}/` + (shuffledOrder[i] + 1) + ".jpg";
+                    var back = document.createElement('div');
+                    img.className = "face front";
+                    back.className = "face back";
+                    cards[i].appendChild(img);
+                    cards[i].appendChild(back);
+                    cards[i].classList.add('card');
+                    cards[i].style.width = '70px';
+                    cards[i].style.height = '120px';
+                    cards[i].style.margin = '15px 84px';
+                    cards[i].style.borderRadius = '10px';
+                    cards[i].style.backgroundColor = 'white';
+                    cards[i].style.border = '5px solid black';
+                    cards[i].style.backfaceVisibility = "hidden";
+                    cards[i].style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+
+                    cards[i].style.display = 'inline-block';
+                    cards[i].style.order = i; // Assign the shuffled order
+
+                    document.body.appendChild(cards[i]);
+
+                    setTimeout(function () {
+                        // Loop through all cards and flip them to show the back face
+                        cards[i].style.transform = "translateX(-100%) rotateY(-180deg)";
+                        cards[i].style.webkitTransform = "translateX(-100%) rotateY(-180deg)"; // Webkit (Safari, Chrome)
+                        cards[i].style.MozTransform = "translateX(-100%) rotateY(-180deg)"; // Mozilla (Firefox)
+                        cards[i].style.msTransform = "translateX(-100%) rotateY(-180deg)"; // Microsoft (IE/Edge)
+                    }, 4000);
+
+                    cards[i].addEventListener('click', function () {
+                        if (flippedCards.length < 2) {
+                            this.classList.remove('flipped');
+                            this.style.transform = 'scale(1.1)';
+                            flippedCards.push(this);
+                            source.push(this.querySelector('img').src);
+                            flipSound.play();
+                            if (flippedCards.length === 2) {
+                                setTimeout(function () {
+                                    check();
+                                }, 0);
+                            }
+                        }
+                    });
+
+                }
+
+                function check() {
+                    if (source[0] == source[1]) {
+                        console.log("yes");
+                        flippedCards.forEach(card => {
+                            right.play();
+                            setInterval(() => {
+                                card.style.border = "5px solid green";
+
+                            }, 300);
+
+                        });
+
+                    }
+                    else {
+                        console.log("no");
+                        flippedCards.forEach(card => {
+                            card.classList.add("flipped");
+                            wrong.play();
+                            setTimeout(() => {
+                                card.style.border = "5px solid red";
+
+                            }, 300);
+                            setTimeout(() => {
+                                card.style.transform = "translateX(-100%) rotateY(-180deg)";
+                                card.style.webkitTransform = "translateX(-100%) rotateY(-180deg)";
+                                card.style.MozTransform = "translateX(-100%) rotateY(-180deg)";
+                                card.style.msTransform = "translateX(-100%) rotateY(-180deg)";
+                                card.style.border = "none";
+
+                            }, 1500);
+                        });
+                    }
+
+                    flippedCards = [];
+                    source = [];
+                }
+
+            }
+
+        </script>
+
+    </div>
+
+</body>
+
+</html>
